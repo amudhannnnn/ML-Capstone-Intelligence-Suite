@@ -512,24 +512,17 @@ elif track == "Track 1: Property Valuation Engine":
             'House Style': house_style
         }])
         
-        # Fill remaining missing training columns with medians/defaults
-        for col, med in reg_meta['medians'].items():
-            if col not in input_data.columns:
-                input_data[col] = med
-        for col, dval in reg_meta['cat_defaults'].items():
-            if col not in input_data.columns:
-                input_data[col] = dval
-                
-        # Reorder columns to match pipeline expectation
-        input_data = input_data[reg_meta['all_features']]
+        # Align features with pipeline expectation
+        feature_order = reg_meta['num_features'] + reg_meta['cat_features']
+        input_data = input_data[feature_order]
         
-        # Predict (model trained on log(SalePrice))
-        log_pred = reg_pipe.predict(input_data)[0]
-        price_pred = float(np.expm1(log_pred))
+        # Predict market valuation directly
+        price_pred = float(reg_pipe.predict(input_data)[0])
         
-        # Upper and lower confidence bounds (using test RMSE)
-        lower_bound = max(10000.0, price_pred - 1.96 * reg_meta['rmse'])
-        upper_bound = price_pred + 1.96 * reg_meta['rmse']
+        # Upper and lower confidence bounds (using test RMSE ~ $19,554)
+        rmse_val = 19554.26
+        lower_bound = max(10000.0, price_pred - 1.96 * rmse_val)
+        upper_bound = price_pred + 1.96 * rmse_val
         
         st.write("")
         st.markdown(f"""
@@ -564,7 +557,7 @@ elif track == "Track 1: Property Valuation Engine":
         with st.expander("Valuation Drivers & Feature Importances", expanded=False):
             fi = reg_pipe.named_steps['regressor'].feature_importances_
             cat_enc = reg_pipe.named_steps['preprocessor'].named_transformers_['cat'].named_steps['encoder']
-            all_feature_names = reg_meta['num_cols'] + list(cat_enc.get_feature_names_out(reg_meta['cat_cols']))
+            all_feature_names = reg_meta['num_features'] + list(cat_enc.get_feature_names_out(reg_meta['cat_features']))
             
             fi_df = pd.DataFrame({'Feature': all_feature_names, 'Importance': fi}).sort_values('Importance', ascending=True).tail(12)
             fig_fi = px.bar(fi_df, x='Importance', y='Feature', orientation='h', title='Top 12 Housing Valuation Drivers (Gradient Boosting)',
