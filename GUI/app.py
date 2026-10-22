@@ -124,9 +124,10 @@ st.markdown("""
 # -----------------------------------------------------------------------------
 @st.cache_resource
 def load_models():
-    reg_path = os.path.join(os.path.dirname(__file__), 'models', 'regression_model.pkl')
-    cls_path = os.path.join(os.path.dirname(__file__), 'models', 'classification_model.pkl')
-    clst_path = os.path.join(os.path.dirname(__file__), 'models', 'clustering_model.pkl')
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    reg_path = os.path.join(base_dir, 'models', 'regression_model.pkl')
+    cls_path = os.path.join(base_dir, 'models', 'classification_model.pkl')
+    clst_path = os.path.join(base_dir, 'models', 'clustering_model.pkl')
     
     reg_pkg = joblib.load(reg_path)
     cls_pkg = joblib.load(cls_path)
